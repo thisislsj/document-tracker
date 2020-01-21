@@ -59,6 +59,65 @@ class DocDetailState extends State<DocDetail>{
     },
     currentTime: initialDate);
   }
+  //Upper Menu
+
+  void _selectMenu(String value) async{
+    switch (value){
+      case menuDelete:
+      if (widget.doc.id ==-1){
+        return;
+      }
+      await _deleteDoc(widget.doc.id);
+
+    }
+  }
+
+  //Delete Doc
+  void _deleteDoc(int id) async{
+    int r=await widget.dbh.deleteDoc(widget.doc.id);
+    Navigator.pop(context,true);
+  }
+
+  //save a doc
+  void _saveDoc(){
+    widget.doc.title=titleCtrl.text;
+    widget.doc.expiration=expirationCtrl.text;
+
+    widget.doc.fqYear=Val.BoolToInt(fqYearCtrl);
+    widget.doc.fqHalfYear=Val.BoolToInt(fqHalfYearCtrl);
+    widget.doc.fqQuarter=Val.BoolToInt(fqQuarterCtrl);
+    widget.doc.fqMonth=Val.BoolToInt(fqMonthCtrl);
+
+    if (widget.doc.id > -1){  //we are modifing an exiting document
+      debugPrint("_update->Doc Id: "+ widget.doc.id.toString());
+      widget.dbh.updateDoc(widget.doc);
+      Navigator.pop(context, true);
+    }
+    else{ //we are saving a new document
+      Future<int> idd=widget.dbh.getMaxId();
+      idd.then((result){
+        debugPrint("_insert->Doc Id:"+ widget.doc.id.toString());
+        widget.doc.id=(result != null) ? result + 1: 1;
+        widget.dbh.insertDoc(widget.doc);
+        Navigator.pop(context,true);
+      });
+    }
+  }
+
+  //submit form
+  void _submitForm(){
+    final FormState form = _formKey.currentState; //get the current state of the firm
+    if(!form.validate()){
+      showMessage('Some data is invalid.Please correct');
+
+    }else{
+      _saveDoc();
+    }
+  }
+
+  void showMessage(String message,[MaterialColor color=Colors.red]){
+    _scaffoldKey.currentState.showSnackBar(new SnackBar(backgroundColor: color,content: new Text(message)));
+  }
   
 }
 
